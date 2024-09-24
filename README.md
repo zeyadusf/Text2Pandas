@@ -128,4 +128,12 @@ After both datasets were similar in structure, they were merged into one set and
 **You can find the data after structuring, filtering and cleaning through:** 
  * **[`Huggingface`](https://huggingface.co/datasets/zeyadusf/text2pandas)**
  * **[`Kaggle`](https://www.kaggle.com/datasets/zeyadusf/convert-text-to-pandas)**
+
+- **number of characters**
+![image](https://github.com/user-attachments/assets/e0859746-205d-453b-8ea6-ca7f0b2814af)
+<br>
+
+- **WordCloud**
+![image](https://github.com/user-attachments/assets/2a9d13d7-ed1e-43dc-aea4-72c30ac4cbf2)
+
 <!-- About Model -->
