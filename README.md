@@ -20,7 +20,7 @@ Convert Text with context about your dataframe to code Pandas by py
   <img src="https://img.shields.io/badge/-HF Dataset -ffd21e?style=flat&logo=huggingface&logoColor=black" alt="Huggingface" />
 </a>
 |
- <a href="#">
+ <a href="https://huggingface.co/spaces/zeyadusf/Text2Pandas">
   <img src="https://img.shields.io/badge/-HF Space -ffd21e?style=flat&logo=huggingface&logoColor=black" alt="Huggingface" />
 </a>
 </div>
@@ -219,11 +219,11 @@ df[df['years_for_rockets'] == '1998']['player'].count()
 
 ```
 
-> links of model in top page.
+> The model link is at the top of the page.
 
 # Future work
 * Improve T5 results.
-* Finetune another model such as_Llama2_
+* Finetune another model such as _Llama2_
 
 ---
 
