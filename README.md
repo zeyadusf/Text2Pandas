@@ -133,6 +133,37 @@ After both datasets were similar in structure, they were merged into one set and
  * **[`Huggingface`](https://huggingface.co/datasets/zeyadusf/text2pandas)**
  * **[`Kaggle`](https://www.kaggle.com/datasets/zeyadusf/convert-text-to-pandas)**
 
+## Load Data
+
+* **Dataset library**
+```py
+  from datasets import load_dataset
+ds = load_dataset("zeyadusf/text2pandas")
+```
+
+* **Pandas library**
+```py
+import pandas as pd
+
+splits = {'train': 'data/train-00000-of-00001.parquet', 'test': 'data/test-00000-of-00001.parquet'}
+df = pd.read_parquet("hf://datasets/zeyadusf/text2pandas/" + splits["train"])
+```
+* **Croissant library**
+```py
+from mlcroissant import Dataset
+
+ds = Dataset(jsonld="https://huggingface.co/api/datasets/zeyadusf/text2pandas/croissant")
+records = ds.records("default")
+```
+* **Polars library**
+```py
+import polars as pl
+
+splits = {'train': 'data/train-00000-of-00001.parquet', 'test': 'data/test-00000-of-00001.parquet'}
+df = pl.read_parquet('hf://datasets/zeyadusf/text2pandas/' + splits['train'])
+
+```
+
 - **number of characters**
 ![image](https://github.com/user-attachments/assets/e0859746-205d-453b-8ea6-ca7f0b2814af)
 <br>
