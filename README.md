@@ -27,23 +27,27 @@ Convert Text with context about your dataframe to code Pandas by py
 
 <!--table of content-->
 ## Table of Content:
-- ..
-- ..
-- ..
+1. [Problem Definition](#problem-definition)
+2. [About Data](#about-data)
+3. [About Model](#about-model)
+4. [Inference Model](#inference-model)
+5. [Future work](#future-work)
+6. [Related Repositories](#related-repositories)
+
 
 --- 
 
 <!-- Problem definition -->
 <br>
 
-# Problem Definition:
+# Problem Definition
 The Text-to-Pandas task involves translating natural language text instructions into code that performs operations using the Pandas library, a powerful data manipulation and analysis tool in Python. The Pandas library allows users to handle data structures like DataFrames, perform filtering, aggregation.
 
 In this task, given a natural language command, the goal is to generate the correct Pandas code to achieve the desired result on a dataset, such as filtering rows, computing aggregates, or selecting specific columns.
 
 <!-- About Data --> 
 
-# About Data :  
+# About Data
 I found two datasets about converting text with context to pandas code on Hugging Face, but the challenge is in the context. The context in both datasets is different which reduces the results of the model. First let's mention the data I found and then show examples, solution and some other problems.
 
 - `Rahima411/text-to-pandas` :
@@ -137,3 +141,126 @@ After both datasets were similar in structure, they were merged into one set and
 ![image](https://github.com/user-attachments/assets/2a9d13d7-ed1e-43dc-aea4-72c30ac4cbf2)
 
 <!-- About Model -->
+
+# About Model
+
+I fine tuned **T5**, T5 is an encoder-decoder model pre-trained on a multi-task mixture of unsupervised and supervised tasks and for which each task is converted into a text-to-text format.
+Using Transformers library and trained on _5 epochs_ and learning rate was _3e-5_ and scheduler type was _cosine_. You can see the rest of the hyperparameters in the [`notebook`](https://www.kaggle.com/code/zeyadusf/text-2-pandas-t5).<br>
+**As for the results on [test dataset](https://huggingface.co/datasets/zeyadusf/text2pandas/viewer/default/test):**
+>  1. **Prediction Loss: 0.0463**
+   - _This is the average loss during the prediction phase of your model on the test set. A lower loss indicates that the model is predicting outputs that are closer to the expected values. In this case, a loss of 0.0463 suggests that the model is making fairly accurate predictions, as a low loss generally signals better performance._
+> 2. **Prediction ROUGE-1: 0.8396**
+   - _ROUGE-1 measures the overlap of unigrams (single words) between the predicted text and the reference text (in this case, the generated Pandas code and the ground truth). A score of 0.8396 (or ~84%) indicates that there is a high level of overlap between the predicted and true sequences, meaning that the model is capturing the general structure well._
+> 3. **Prediction ROUGE-2: 0.8200**
+   - _ROUGE-2 evaluates bigram (two-word) overlap between the predicted and reference texts. A score of 0.82 (~82%) suggests that the model is also doing well at capturing the relationships between words, which is important for generating coherent and syntactically correct code._
+> 4. **Prediction ROUGE-L: 0.8396**
+   - _ROUGE-L measures the longest common subsequence (LCS) between the predicted and reference sequences, focusing on the sequence order. A high ROUGE-L score (~84%) means the model is generating sequences that align well with the true code in terms of overall structure and ordering of operations. This is crucial when generating code, as the order of operations affects the logic._
+> 5. **Prediction BLEU: 0.4729**
+   - _BLEU evaluates how many n-grams (in this case, code snippets) in the predicted output match those in the reference output. A BLEU score of 0.4729 (or ~47%) is a moderate result for a text-to-code task. BLEU can be more challenging to optimize for code generation since it requires exact matches at a token level, including symbols, syntax, and even whitespace._
+
+> **In general, this is a promising result, showing that the model is performing well on the task, with room for improvement on exact token matching (reflected by the BLEU score).** <br>
+
+## Inference Model
+
+```py
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+import torch
+
+tokenizer = AutoTokenizer.from_pretrained("zeyadusf/text2pandas-T5")
+model = AutoModelForSeq2SeqLM.from_pretrained("zeyadusf/text2pandas-T5")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+def generate_pandas(question, context, model, tokenizer, max_length=512, num_beams=4, early_stopping=True):
+    """
+    Generates text based on the provided question and context using a pre-trained model and tokenizer.
+
+    Args:
+        question (str): The question part of the input.
+        context (str): The context (e.g., DataFrame description) related to the question.
+        model (torch.nn.Module): The pre-trained language model (e.g., T5).
+        tokenizer (PreTrainedTokenizer): The tokenizer corresponding to the model.
+        max_length (int): Maximum length of the generated text.
+        num_beams (int): The number of beams for beam search.
+        early_stopping (bool): Whether to stop the beam search when enough hypotheses have reached the end.
+
+    Returns:
+        str: The generated text decoded by the tokenizer.
+    """
+    # Prepare the input text by combining the question and context
+    input_text = f"<question> {question} <context> {context}"
+
+    # Tokenize the input text, convert to tensor, and truncate if needed
+    inputs = tokenizer.encode(input_text, return_tensors="pt", truncation=True, max_length=max_length)
+
+    # Move inputs and model to the appropriate device
+    inputs = inputs.to(device)
+    model = model.to(device)
+
+    # Generate predictions without calculating gradients
+    with torch.no_grad():
+        outputs = model.generate(inputs, max_length=max_length, num_beams=num_beams, early_stopping=early_stopping)
+
+    # Decode the generated tokens into text, skipping special tokens
+    predicted_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+    return predicted_text
+
+# Example usage
+question = "what is the total amount of players for the rockets in 1998 only?"
+context = "df = pd.DataFrame(columns=['player', 'years_for_rockets'])"
+
+# Generate and print the predicted text
+predicted_text = generate_pandas(question, context, model, tokenizer)
+print(predicted_text)
+```
+**output**
+```py
+df[df['years_for_rockets'] == '1998']['player'].count()
+
+```
+
+> links of model in top page.
+
+# Future work
+* Improve T5 results.
+* Finetune another model such as_Llama2_
+
+---
+
+### Related Repositories
+
+**[`LLMs from Scratch`](https://github.com/zeyadusf/LLMs-from-Scratch)**
+**[`FineTuning Large Language Models`](https://github.com/zeyadusf/FineTuning-LLMs)**
+**[`Topics in NLP and LLMs`](https://github.com/zeyadusf/topics-in-nlp-llm)**
+<!--social media-->
+<hr>
+
+## 📞 Contact :
+
+<div align="center">
+<a href="https://www.kaggle.com/zeyadusf" target="blank">
+  <img align="center" src="https://raw.githubusercontent.com/rahuldkjain/github-profile-readme-generator/master/src/images/icons/Social/kaggle.svg" alt="zeyadusf" height="30" width="40" />
+</a>
+
+
+<a href="https://huggingface.co/zeyadusf" target="blank">
+  <img align="center" src="https://github.com/zeyadusf/zeyadusf/assets/83798621/5c3db142-cda7-4c55-bcce-cc09d5b3aa50" alt="zeyadusf" height="40" width="40" />
+</a> 
+
+ <a href="https://github.com/zeyadusf" target="blank">
+   <img align="center" src="https://raw.githubusercontent.com/rahuldkjain/github-profile-readme-generator/master/src/images/icons/Social/github.svg" alt="zeyadusf" height="30" width="40" />
+ </a>
+  
+<a href="https://www.linkedin.com/in/zeyadusf/" target="blank">
+  <img align="center" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/linkedin/linkedin-original.svg" alt="Zeyad Usf" height="30" width="40" />
+  </a>
+  
+  
+  <a href="https://www.facebook.com/ziayd.yosif" target="blank">
+    <img align="center" src="https://raw.githubusercontent.com/rahuldkjain/github-profile-readme-generator/master/src/images/icons/Social/facebook.svg" alt="Zeyad Usf" height="30" width="40" />
+  </a>
+  
+<a href="https://www.instagram.com/zeyadusf" target="blank">
+  <img align="center" src="https://raw.githubusercontent.com/rahuldkjain/github-profile-readme-generator/master/src/images/icons/Social/instagram.svg" alt="zeyadusf" height="30" width="40" />
+</a> 
+</div>
